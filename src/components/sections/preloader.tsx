@@ -80,15 +80,16 @@ export function Preloader() {
         <div className="preloader-content">
           <div ref={logo} className="preloader-logo">
             {/* faded ghost */}
-            <img className="preloader-logo-ghost" src="/assets/tarudhan-logo.webp" alt="Tarudhan Valley Golf Resort logo" width={1200} height={372} fetchPriority="high" decoding="async" />
+            <img className="preloader-logo-ghost" src={TarudhanLogo} alt="Tarudhan Valley Golf Resort logo" width={1200} height={372} fetchPriority="high" decoding="async" />
             {/* real colours, revealed by a soft left-to-right mask */}
             <img className="preloader-logo-color" src={TarudhanLogo} alt="" aria-hidden="true" width={1200} height={372} decoding="async" />
           </div>
           <div className="preloader-meta">
             <span className="preloader-bar" aria-hidden="true"><span ref={bar} className="preloader-bar-fill" /></span>
             <div className="preloader-row">
-              <span className="preloader-place">Manesar · Gurugram</span>
-              <span ref={count} className="preloader-count">000</span>
+              <span className="preloader-place">
+                Tarudhan Valley · Luxury Golf Resort in Manesar
+              </span>
             </div>
           </div>
         </div>

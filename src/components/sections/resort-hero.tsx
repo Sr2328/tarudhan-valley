@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { reveal } from "@/lib/motion-variants";
 import { SectionLabel } from "./section-label";
+import tarudhanHero from "/images/tarudhan-hero.webp";
 
 /**
  * The preloader curtain finishes opening at ~3.2s. Hero intro animations start a little
@@ -98,7 +99,7 @@ export function ResortHero() {
           <span className="glass-corner glass-corner-br" aria-hidden="true" />
 
           <div className="relative aspect-[16/10] overflow-hidden rounded-[1.05rem]">
-            <img src="/images/tarudhan-villa.webp" alt="Illustrative view of a golf villa at Tarudhan Valley" width={640} height={400} loading="eager" className="size-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <img src={tarudhanHero} alt="Illustrative view of a golf villa at Tarudhan Valley" width={640} height={400} loading="eager" className="size-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <span className="absolute right-2.5 top-2.5 flex size-9 items-center justify-center rounded-full bg-lime text-deep transition-transform duration-300 group-hover:rotate-45"><ArrowUpRight className="size-4" /></span>
           </div>
 

@@ -183,12 +183,6 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  html,
-  body {
-    max-width: 100%;
-    overflow-x: clip;
-  }
-
   ::selection {
     background: var(--color-primary);
     color: var(--color-primary-foreground);
@@ -329,59 +323,28 @@ html.lenis body {
   }
 }
 
-/* Overview: pinned horizontal scroll on every screen size ------------------------- */
-.overview-pin {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
+/* Overview: wide cards (30% text / 70% image), pinned horizontal scroll ------------- */
 .overview-track {
-  display: flex;
-  width: max-content;
-  gap: 0.75rem;
   will-change: transform;
 }
 
-/* Mobile: portrait card, text on top, image fills the rest */
 .overview-card {
   display: flex;
-  flex: 0 0 auto;
   flex-direction: column;
   overflow: hidden;
-  width: min(84vw, 400px);
-  height: clamp(360px, calc(100svh - 380px), 540px);
   border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
   border-radius: 1.25rem;
   background: var(--card);
-  opacity: 0.7;
-  transition: background-color 0.5s, color 0.5s, opacity 0.5s, border-color 0.5s;
-}
-
-.ov-text {
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 0.9rem;
-  padding: 1.1rem 1.1rem 1rem;
+  transition: translate 0.5s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.5s, color 0.5s, opacity 0.5s;
 }
 
 .ov-media {
-  position: relative;
-  flex: 1 1 0;
-  min-height: 120px;
-  overflow: hidden;
+  min-height: 220px;
+  aspect-ratio: 16 / 10;
 }
 
 .ov-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scale(1.06);
+  transform: scale(1.08);
   transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -389,7 +352,7 @@ html.lenis body {
   display: flex;
   align-items: baseline;
   gap: 0.18em;
-  font-size: clamp(2.3rem, 9vw, 2.8rem);
+  font-size: clamp(2.6rem, 9vw, 3.4rem);
   line-height: 0.95;
   letter-spacing: -0.035em;
   white-space: nowrap;
@@ -402,67 +365,27 @@ html.lenis body {
   opacity: 0.75;
 }
 
-.ov-desc {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  overflow: hidden;
-}
-
-/* Active card (all sizes): dark green, lime value, image settles, full colour text */
-.overview-card.is-active {
-  opacity: 1;
-  background: var(--deep);
-  border-color: transparent;
-  color: var(--primary-foreground);
-}
-
-.overview-card.is-active .ov-img {
-  transform: scale(1);
-}
-
-.overview-card.is-active .ov-value {
-  color: var(--lime);
-}
-
-.overview-card.is-active .ov-label {
-  color: color-mix(in oklab, var(--primary-foreground) 65%, transparent);
-}
-
-.overview-card.is-active .ov-arrow {
-  color: var(--lime);
-}
-
-.overview-card.is-active .ov-note {
-  color: var(--primary-foreground);
-}
-
-.overview-card.is-active .ov-desc {
-  color: color-mix(in oklab, var(--primary-foreground) 80%, transparent);
-  border-color: color-mix(in oklab, var(--primary-foreground) 20%, transparent);
-}
-
-/* Desktop / tablet: landscape card, text 40% left, image 60% right */
 @media (min-width: 768px) {
+  .overview-pin {
+    overflow: hidden;
+  }
+
   .overview-track {
+    display: flex !important;
+    width: max-content;
     gap: 1rem;
   }
 
   .overview-card {
+    flex: 0 0 auto;
     flex-direction: row;
-    width: min(78vw, 940px);
-    height: clamp(320px, calc(100svh - 310px), 480px);
-  }
-
-  .ov-text {
-    flex: 0 0 40%;
-    justify-content: space-between;
-    padding: 1.75rem;
+    width: min(76vw, 920px);
+    height: clamp(380px, 54vh, 470px);
+    opacity: 0.5;
   }
 
   .ov-media {
-    flex: 1 1 0;
+    aspect-ratio: auto;
     min-height: 0;
   }
 
@@ -470,30 +393,75 @@ html.lenis body {
     font-size: clamp(2.2rem, 3vw, 2.8rem);
   }
 
+  .ov-desc {
+    opacity: 0.65;
+    transition: opacity 0.5s;
+  }
+
+  .ov-chip {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.5s 0.15s, transform 0.5s 0.15s;
+  }
+
+  /* Active card: grows, goes dark green, value turns lime, image settles, text fully shown */
+  .overview-card.is-active {
+    opacity: 1;
+    background: var(--deep);
+    border-color: transparent;
+    color: var(--primary-foreground);
+  }
+
+  .overview-card.is-active .ov-img {
+    transform: scale(1);
+  }
+
+  .overview-card.is-active .ov-chip {
+    opacity: 1;
+    transform: none;
+  }
+
   .overview-card.is-active .ov-value {
-    font-size: clamp(3rem, 4.2vw, 4rem);
+    font-size: clamp(3.2rem, 4.4vw, 4.2rem);
+    color: var(--lime);
   }
 
   .overview-card.is-active .ov-value-long {
-    font-size: clamp(2.3rem, 3.2vw, 3rem);
+    font-size: clamp(2.5rem, 3.3vw, 3.1rem);
   }
 
-  .ov-desc {
-    display: block;
-    -webkit-line-clamp: unset;
-    line-clamp: unset;
-    overflow: visible;
+  .overview-card.is-active .ov-label,
+  .overview-card.is-active .ov-index {
+    color: color-mix(in oklab, var(--primary-foreground) 65%, transparent);
   }
 
-  .overview-card:not(.is-active):hover {
-    opacity: 0.9;
+  .overview-card.is-active .ov-note {
+    color: var(--primary-foreground);
+  }
+
+  .overview-card.is-active .ov-desc {
+    opacity: 1;
+    color: color-mix(in oklab, var(--primary-foreground) 80%, transparent);
+    border-color: color-mix(in oklab, var(--primary-foreground) 20%, transparent);
   }
 }
 
-/* Short laptop screens: slightly smaller cards so nothing touches the bottom */
-@media (min-width: 768px) and (max-height: 700px) {
-  .overview-card {
-    height: clamp(300px, calc(100svh - 280px), 400px);
+.overview-card:not(.is-active):hover {
+  translate: 0 -6px;
+}
+
+/* Mobile: every card reads as "active" (no horizontal pin) */
+@media (max-width: 767px) {
+  .overview-card .ov-value {
+    color: var(--primary);
+  }
+
+  .ov-chip {
+    opacity: 1;
+  }
+
+  .ov-img {
+    transform: none;
   }
 }
 
@@ -583,6 +551,7 @@ html.lenis body {
     padding-block: 7rem;
   }
 }
+
 
 /* Residences ---------------------------------------------------------- */
 .home-card {
@@ -778,6 +747,7 @@ html.lenis body {
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
+  align-items: center;
 }
 
 .preloader-bar {
@@ -1226,20 +1196,42 @@ html.lenis body {
   color: var(--nav-ink);
 }
 
-/* About ------------------------------------------------------------------ */
-.about-rail {
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-  scroll-padding-inline: 1.5rem;
+/* About: key-feature marquee --------------------------------------------- */
+.about-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
 }
 
-.about-rail::-webkit-scrollbar {
-  display: none;
+.about-marquee-track {
+  display: flex;
+  width: max-content;
+  /* cards drift right-to-left, so new ones enter from the right edge */
+  animation: marquee var(--marquee-duration, 70s) linear infinite;
+  will-change: transform;
 }
 
-@media (min-width: 768px) {
-  .about-rail {
-    scroll-padding-inline: 0;
+.about-marquee:hover .about-marquee-track,
+.about-marquee:focus-within .about-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (max-width: 640px) {
+  .about-marquee-track {
+    --marquee-duration: 55s;
+  }
+}
+
+/* Reduced motion: no auto-scroll, the strip becomes a normal swipeable row */
+@media (prefers-reduced-motion: reduce) {
+  .about-marquee {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+    scrollbar-width: none;
+  }
+
+  .about-marquee-track {
+    animation: none;
   }
 }
