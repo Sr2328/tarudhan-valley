@@ -1,5 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, Building2, Flag, Hotel, Home, KeyRound, MapPin, ShieldCheck, Sparkles, TrendingUp, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, Building2, Flag, Hotel, Home, KeyRound, MapPin, MessageCircle, Phone, ShieldCheck, Sparkles, TrendingUp, X, type LucideIcon } from "lucide-react";
 import { reveal } from "@/lib/motion-variants";
 import { SectionLabel } from "./section-label";
 
@@ -8,11 +9,18 @@ import { SectionLabel } from "./section-label";
  * Investment copy is deliberately non-promissory: no return figures are stated.
  * ------------------------------------------------------------------------ */
 
+const CONTACT = {
+  phone: "+910000000000", // TODO: real phone number
+  whatsapp: "910000000000", // TODO: country code + number, no "+"
+};
+
 const homeTypes = [
   { n: "01", title: "Orchard Homes", line: "Homes among the greens", src: "/images/tarudhan-hero.webp", pos: "62% 55%", alt: "Illustrative view of homes set among trees at Tarudhan Valley" },
   { n: "02", title: "Golf Villas", line: "2 & 3 BHK by the course", src: "/images/tarudhan-villa.webp", pos: "center", alt: "Illustrative view of a golf villa at Tarudhan Valley" },
   { n: "03", title: "Studio Apartments", line: "Easy, compact living", src: "/images/tarudhan-pool.webp", pos: "center", alt: "Illustrative view of the pool near the studio apartments at Tarudhan Valley" },
 ] as const;
+
+type ShapeKey = "arch" | "leaf" | "soft" | "scoop";
 
 type Feature = {
   icon: LucideIcon;
@@ -22,16 +30,16 @@ type Feature = {
   src: string;
   pos: string;
   alt: string;
-  shape: string;
+  shape: ShapeKey;
 };
 
-/* Different silhouettes so the marquee feels like a collage, not a row of boxes. */
-const SHAPES = {
-  arch: "rounded-t-[999px] rounded-b-[1.75rem]",
-  leaf: "rounded-tl-[5rem] rounded-br-[5rem] rounded-tr-[1.75rem] rounded-bl-[1.75rem]",
+/* Big curves only on the TOP corners, small radii at the bottom, so the info panel is never clipped. */
+const SHAPES: Record<ShapeKey, string> = {
+  arch: "[border-radius:50%_50%_1.75rem_1.75rem/9rem_9rem_1.75rem_1.75rem]",
+  leaf: "rounded-tl-[5rem] rounded-tr-[1.75rem] rounded-b-[1.75rem]",
   soft: "rounded-[2rem]",
-  scoop: "rounded-tr-[5rem] rounded-bl-[5rem] rounded-tl-[1.75rem] rounded-br-[1.75rem]",
-} as const;
+  scoop: "rounded-tr-[5rem] rounded-tl-[1.75rem] rounded-b-[1.75rem]",
+};
 
 const features: Feature[] = [
   {
@@ -42,7 +50,7 @@ const features: Feature[] = [
     src: "/images/tarudhan-hero.webp",
     pos: "70% 45%",
     alt: "Illustrative aerial view of the Tarudhan Valley community",
-    shape: SHAPES.arch,
+    shape: "arch",
   },
   {
     icon: Building2,
@@ -52,7 +60,7 @@ const features: Feature[] = [
     src: "/images/tarudhan-pool.webp",
     pos: "40% 60%",
     alt: "Illustrative view of the resort leisure area",
-    shape: SHAPES.leaf,
+    shape: "leaf",
   },
   {
     icon: KeyRound,
@@ -62,7 +70,7 @@ const features: Feature[] = [
     src: "/images/tarudhan-villa.webp",
     pos: "80% 55%",
     alt: "Illustrative view of a completed villa",
-    shape: SHAPES.soft,
+    shape: "soft",
   },
   {
     icon: Hotel,
@@ -72,7 +80,7 @@ const features: Feature[] = [
     src: "/images/tarudhan-course.webp",
     pos: "20% 50%",
     alt: "Illustrative view across the course towards the resort",
-    shape: SHAPES.scoop,
+    shape: "scoop",
   },
   {
     icon: Flag,
@@ -82,7 +90,7 @@ const features: Feature[] = [
     src: "/images/tarudhan-course.webp",
     pos: "center",
     alt: "Illustrative view of the nine-hole golf course",
-    shape: SHAPES.arch,
+    shape: "arch",
   },
   {
     icon: Home,
@@ -92,7 +100,7 @@ const features: Feature[] = [
     src: "/images/tarudhan-villa.webp",
     pos: "25% 60%",
     alt: "Illustrative view of villa terraces",
-    shape: SHAPES.leaf,
+    shape: "leaf",
   },
   {
     icon: ShieldCheck,
@@ -102,7 +110,7 @@ const features: Feature[] = [
     src: "/images/tarudhan-hero.webp",
     pos: "20% 60%",
     alt: "Illustrative view of the landscaped community",
-    shape: SHAPES.soft,
+    shape: "soft",
   },
   {
     icon: MapPin,
@@ -112,9 +120,30 @@ const features: Feature[] = [
     src: "/images/tarudhan-pool.webp",
     pos: "70% 40%",
     alt: "Illustrative view of the valley setting",
-    shape: SHAPES.scoop,
+    shape: "scoop",
   },
 ];
+
+/* Detail-sheet content, keyed by feature tag. Add sizes/units here whenever you have them. */
+type Unit = { name: string; note?: string; built: string; plot?: string };
+const details: Record<string, { facts: [string, string][]; units?: Unit[] }> = {
+  Investment: { facts: [["Units", "141"], ["Area", "65 acres"], ["Pricing", "On request"], ["Returns", "Not guaranteed"]] },
+  Commercial: { facts: [["On site", "Resort hotel"], ["Also", "Conferencing, banquet lawns"], ["Permitted use", "Confirm per unit"], ["Pricing", "On request"]] },
+  Ready: { facts: [["Status", "Completed"], ["Units", "141"], ["Area", "65 acres"], ["Pricing", "On request"]] },
+  Hospitality: { facts: [["Operator", "Lemon Tree Hotels"], ["Property", "Resort hotel"], ["Also", "Conferencing facilities"], ["Location", "Manesar, Gurugram"]] },
+  Lifestyle: { facts: [["Course", "Nine-hole"], ["Designer", "Graham Cooke"], ["Also", "Driving range"], ["Community", "Gated"]] },
+  Choice: {
+    facts: [["Style", "Bali · Villa · Studio"], ["Property size", "950 – 3,500 sq ft"], ["Total units", "141"], ["Pricing", "On request"]],
+    units: [
+      { name: "Orchard Homes", note: "Bali style", built: "3,500 sq ft", plot: "1,000 sq yd" }, // TODO: confirm plot size & unit
+      { name: "Golf Villas · 2 BHK", built: "2,600 sq ft", plot: "250 sq yd" },
+      { name: "Golf Villas · 3 BHK", built: "3,200 sq ft", plot: "350 sq yd" },
+      { name: "Studio Apartments", built: "950 – 1,100 sq ft" },
+    ],
+  },
+  Community: { facts: [["Area", "65 acres"], ["Amenities", "Clubhouse, spa, pool, sports"], ["Access", "Gated"], ["Units", "141"]] },
+  Location: { facts: [["Road", "Naurangpur–Tauru Road"], ["Area", "Manesar"], ["District", "Gurugram"], ["Region", "Delhi NCR"]] },
+};
 
 const facts = [
   ["Type", "Studio apartments, villas"],
@@ -127,23 +156,138 @@ const facts = [
 
 const onProperty = ["Apartments", "Villas", "Balinese-style wooden cottages", "Clubhouse", "Resort hotel", "Conferencing facilities", "Golf driving range"] as const;
 
-function FeatureCard({ f, index }: { f: Feature; index: number }) {
+/* ------------------------------------------------------------------ feature card */
+function FeatureCard({ f, index, hidden, onOpen }: { f: Feature; index: number; hidden?: boolean; onOpen: (f: Feature) => void }) {
   const Icon = f.icon;
   return (
-    <article className={`about-feature group relative mr-4 h-[420px] w-[264px] shrink-0 overflow-hidden bg-deep sm:h-[460px] sm:w-[300px] lg:h-[500px] lg:w-[340px] ${f.shape} ${index % 2 ? "mt-6 lg:mt-8" : ""}`}>
-      <img src={f.src} alt={f.alt} loading="lazy" decoding="async" width={680} height={1000} style={{ objectPosition: f.pos }} className="absolute inset-0 size-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-110" />
+    <button
+      type="button"
+      onClick={() => onOpen(f)}
+      aria-hidden={hidden || undefined}
+      tabIndex={hidden ? -1 : undefined}
+      aria-label={`${f.title}: view details`}
+      className={`about-feature group relative mr-4 flex h-[440px] w-[264px] shrink-0 flex-col justify-end overflow-hidden bg-deep text-left sm:h-[470px] sm:w-[300px] lg:h-[510px] lg:w-[340px] ${SHAPES[f.shape]} ${index % 2 ? "mt-6 lg:mt-8" : ""}`}
+    >
+      <img src={f.src} alt={f.alt} loading="lazy" decoding="async" width={680} height={1000} draggable={false} style={{ objectPosition: f.pos }} className="absolute inset-0 size-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-110" />
       <div className="bg-image-scrim absolute inset-0" />
-      <span className="absolute left-1/2 top-5 -translate-x-1/2 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-white backdrop-blur-md sm:top-6">{f.tag}</span>
-      <div className="absolute inset-x-3 bottom-3 rounded-[1.4rem] border border-white/20 bg-black/35 p-4 text-primary-foreground backdrop-blur-md sm:inset-x-4 sm:bottom-4 sm:p-5">
-        <span className="flex size-9 items-center justify-center rounded-full bg-lime text-deep"><Icon className="size-4" aria-hidden="true" /></span>
+      <span className="absolute left-1/2 top-5 z-10 -translate-x-1/2 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-white backdrop-blur-md sm:top-6">{f.tag}</span>
+
+      {/* In normal flow (not absolutely positioned), so the rounded card corners can never cut it */}
+      <div className="relative z-10 m-3 rounded-[1.25rem] border border-white/20 bg-black/40 p-4 text-primary-foreground backdrop-blur-md sm:m-4 sm:p-5">
+        <div className="flex items-start justify-between">
+          <span className="flex size-9 items-center justify-center rounded-full bg-lime text-deep"><Icon className="size-4" aria-hidden="true" /></span>
+          <span className="flex size-9 items-center justify-center rounded-full border border-white/35 text-white transition-all duration-500 group-hover:rotate-45 group-hover:border-transparent group-hover:bg-lime group-hover:text-deep">
+            <ArrowUpRight className="size-4" aria-hidden="true" />
+          </span>
+        </div>
         <h3 className="serif-display mt-3 text-xl leading-tight sm:text-2xl">{f.title}</h3>
-        <p className="mt-2 text-[13px] leading-5 text-primary-foreground/80">{f.text}</p>
+        <p className="mt-2 line-clamp-4 text-[13px] leading-5 text-primary-foreground/80">{f.text}</p>
+        <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-[0.14em] text-lime">
+          View details <ArrowUpRight className="size-3.5" aria-hidden="true" />
+        </span>
       </div>
-    </article>
+    </button>
   );
 }
 
+/* ------------------------------------------------------------------ details sheet */
+function DetailSheet({ f, onClose }: { f: Feature; onClose: () => void }) {
+  const d = details[f.tag] ?? { facts: [] };
+  const Icon = f.icon;
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const tel = `tel:${CONTACT.phone}`;
+  const wa = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(`Hi, I'd like details about "${f.title}" at Tarudhan Valley.`)}`;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-[95] flex items-end justify-center bg-black/60 backdrop-blur-sm md:items-center md:p-6" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={f.title}
+        onClick={(e) => e.stopPropagation()}
+        className="relative flex h-[100svh] w-full flex-col overflow-hidden bg-background md:h-auto md:max-h-[90vh] md:max-w-5xl md:rounded-[2rem]"
+      >
+        <button ref={closeRef} type="button" onClick={onClose} aria-label="Close details" className="absolute right-4 top-4 z-20 flex size-10 items-center justify-center rounded-full bg-[#faf7f0] text-[#0c3b25] shadow-lg">
+          <X className="size-5" />
+        </button>
+
+        {/* data-lenis-prevent lets this panel scroll natively while Lenis runs on the page */}
+        <div data-lenis-prevent className="flex-1 overflow-y-auto overscroll-contain md:grid md:grid-cols-[1fr_1.1fr] md:overflow-hidden">
+          <div className="relative h-[38svh] min-h-[240px] md:h-auto md:min-h-full">
+            <img src={f.src} alt={f.alt} style={{ objectPosition: f.pos }} className="absolute inset-0 size-full object-cover" />
+            <div className="bg-image-scrim absolute inset-0" />
+            <div className="absolute inset-x-0 bottom-0 p-5 text-white md:p-8">
+              <p className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-lime"><Icon className="size-4" aria-hidden="true" />{f.tag}</p>
+              <h3 className="serif-display mt-2 text-3xl leading-[1.02] md:text-4xl">{f.title}</h3>
+            </div>
+          </div>
+
+          <div data-lenis-prevent className="min-w-0 p-5 pb-6 md:max-h-[90vh] md:overflow-y-auto md:overscroll-contain md:p-8">
+            <p className="text-[15px] leading-7 text-muted-foreground md:text-base">{f.text}</p>
+
+            <dl className="mt-6 grid grid-cols-2 gap-2.5 md:gap-3">
+              {d.facts.map(([label, value]) => (
+                <div key={label} className="min-w-0 rounded-2xl border border-border bg-card p-3.5 md:p-4">
+                  <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary/70">{label}</dt>
+                  <dd className="serif-display mt-1 break-words text-base leading-snug md:text-lg">{value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            {d.units && (
+              <div className="mt-7">
+                <h4 className="serif-display text-xl md:text-2xl">Sizes &amp; types</h4>
+                <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                  {d.units.map((u) => (
+                    <div key={u.name} className="rounded-2xl border border-border bg-card p-4">
+                      <p className="font-medium">{u.name}</p>
+                      {u.note && <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{u.note}</p>}
+                      <p className="mt-3 text-xs text-muted-foreground">Built-up</p>
+                      <p className="text-sm font-medium">{u.built}</p>
+                      {u.plot && (<><p className="mt-2 text-xs text-muted-foreground">Plot size</p><p className="text-sm font-medium">{u.plot}</p></>)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <p className="mt-6 text-[11px] leading-4 text-muted-foreground">
+              Details are indicative, as published by the developer and hotel operator, and may change. Returns are not guaranteed. Images are illustrative.
+            </p>
+          </div>
+        </div>
+
+        {/* Always-visible CTA bar */}
+        <div className="flex gap-2 border-t border-border bg-[#faf7f0] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:justify-end md:gap-3 md:p-4">
+          <a href={tel} className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-lime px-5 text-sm font-medium text-deep transition-transform active:scale-[0.98] md:flex-none md:px-7">
+            <Phone className="size-4" aria-hidden="true" /> Request quick call
+          </a>
+          <a href={wa} target="_blank" rel="noreferrer" className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-[#0c3b25] px-5 text-sm font-medium text-[#faf7f0] transition-transform active:scale-[0.98] md:flex-none md:px-7">
+            <MessageCircle className="size-4" aria-hidden="true" /> WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ section */
 export function AboutSection() {
+  const [active, setActive] = useState<Feature | null>(null);
+  const close = () => setActive(null);
+
   return (
     <section id="about" className="relative overflow-hidden bg-background py-20 md:py-28">
       <div className="mx-auto max-w-[1520px] px-6 md:px-12 lg:px-16">
@@ -181,15 +325,14 @@ export function AboutSection() {
           </motion.div>
         </div>
 
-        {/* ---------- Row 2: heading for the key-feature marquee ---------- */}
+        {/* ---------- Row 2: heading for the key-feature marquee (underline removed) ---------- */}
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.3 }} variants={reveal} className="mt-16 grid gap-6 md:mt-24 lg:grid-cols-[1.2fr_1fr] lg:items-end lg:gap-12">
           <div>
             <SectionLabel>Key features</SectionLabel>
             <h2 className="serif-display mt-5 max-w-2xl text-4xl leading-[1.02] md:text-6xl">Why buyers and investors look twice.</h2>
-            <span className="mt-5 block h-[2px] w-16 bg-primary" aria-hidden="true" />
           </div>
           <p className="max-w-md text-sm leading-6 text-muted-foreground md:text-base lg:justify-self-end">
-            A completed golf community with a branded hotel, flexible home types and room for hospitality and events. Hover to pause, or just watch it glide.
+            A completed golf community with a branded hotel, flexible home types and room for hospitality and events. Tap any card for full details.
           </p>
         </motion.div>
       </div>
@@ -197,10 +340,10 @@ export function AboutSection() {
       {/* ---------- Infinite marquee: full-bleed, drifts in from the right ---------- */}
       <motion.div initial={{ opacity: 0, x: 80 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.1 }} transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }} className="about-marquee mt-10 md:mt-14" role="region" aria-label="Key features of Tarudhan Valley">
         <div className="about-marquee-track items-start pb-10">
-          {features.map((f, i) => <FeatureCard key={f.title} f={f} index={i} />)}
+          {features.map((f, i) => <FeatureCard key={f.title} f={f} index={i} onOpen={setActive} />)}
           {/* duplicate set makes the loop seamless; hidden from assistive tech */}
           <div className="flex items-start" aria-hidden="true">
-            {features.map((f, i) => <FeatureCard key={`dup-${f.title}`} f={f} index={i} />)}
+            {features.map((f, i) => <FeatureCard key={`dup-${f.title}`} f={f} index={i} hidden onOpen={setActive} />)}
           </div>
         </div>
       </motion.div>
@@ -239,6 +382,8 @@ export function AboutSection() {
           Details are as published by the developer and hotel operator and may change; please verify directly before making any decision. Real estate returns are not guaranteed, and permitted use varies by unit. Images are illustrative.
         </p>
       </div>
+
+      {active && <DetailSheet f={active} onClose={close} />}
     </section>
   );
 }
