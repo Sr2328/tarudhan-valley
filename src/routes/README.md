@@ -1,21 +1,60 @@
-# Routes
+import { createFileRoute } from "@tanstack/react-router";
 
-TanStack Start uses **file-based routing**. Every `.tsx` file in this directory
-defines a route. Do **not** create `src/pages/`, `src/routes/_app/index.tsx`, or
-`app/layout.tsx` — those are Next.js / Remix conventions. The only root layout
-is `src/routes/__root.tsx`.
+import {
+  AboutSection,
+  AmenitiesSection,
+  FAQSection,
+  GallerySection,
+  GolfSection,
+  GuestVoicesSection,
+  InterludeSection,
+  InvitationSection,
+  LocationSection,
+  OverviewSection,
+  ResidencesSection,
+  ResortFooter,
+  ResortHero,
+  ResortNavigation,
+  StatementSection,
+} from "@/components/sections";
+import { CursorRing } from "@/components/sections/cursor-ring";
+import { Preloader } from "@/components/sections/preloader";
+import { useResortMotion } from "@/hooks/use-resort-motion";
+import { buildJsonLd, seoLinks, seoMeta, serializeJsonLd } from "@/lib/seo";
 
-## Conventions
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: seoMeta(),
+    links: seoLinks(),
+    scripts: [{ type: "application/ld+json", children: serializeJsonLd(buildJsonLd()) }],
+  }),
+  component: Index,
+});
 
-| File | URL |
-| --- | --- |
-| `index.tsx` | `/` |
-| `about.tsx` | `/about` |
-| `users/index.tsx` | `/users` |
-| `users/$id.tsx` | `/users/:id` (dynamic — bare `$`, no curly braces) |
-| `posts/{-$category}.tsx` | `/posts/:category?` (optional segment) |
-| `files/$.tsx` | `/files/*` (splat — read via `_splat` param, never `*`) |
-| `_layout.tsx` | layout route (renders children via `<Outlet />`) |
-| `__root.tsx` | app shell — wraps every page; preserve `<Outlet />` |
+function Index() {
+  useResortMotion();
 
-`routeTree.gen.ts` is auto-generated. Don't edit it by hand.
+  return (
+    <>
+      <Preloader />
+      <CursorRing />
+      <ResortNavigation />
+      <main>
+        <ResortHero />
+        <AboutSection />
+        <OverviewSection />
+        <StatementSection />
+        <ResidencesSection />
+        <AmenitiesSection />
+        <GolfSection />
+        <InterludeSection />
+        <GallerySection />
+        <LocationSection />
+        <GuestVoicesSection />
+        <FAQSection />
+        <InvitationSection />
+      </main>
+      <ResortFooter />
+    </>
+  );
+}

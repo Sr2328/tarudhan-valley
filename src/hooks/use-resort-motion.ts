@@ -9,7 +9,7 @@ import Lenis from "lenis";
  * - Lenis smooth scrolling, synced to GSAP's ticker / ScrollTrigger
  * - Hero zoom-out + scroll parallax
  * - Heading mask reveals
- * - Pinned horizontal-scroll overview
+ * - Pinned horizontal-scroll overview (desktop + mobile)
  * - Scroll-scrubbed word-by-word statement
  * - Multi-speed image parallax (residence cards, invitation)
  * - Pinned golf section with zoom
@@ -56,9 +56,6 @@ export function useResortMotion(enabled = true) {
     const ctx = gsap.context(() => {
       /* ---------- Hero ---------- */
       gsap.fromTo(".hero-image", { scale: 1.28 }, { scale: 1, duration: 2.6, delay: 1.9, ease: "expo.out" });
-      // Wordmark: the intro animates the inner text; the scroll effect animates its wrapper.
-      // They are different elements on purpose; two tweens fighting over one element's
-      // opacity is what previously left the wordmark invisible.
       gsap.from(".hero-wordmark", { yPercent: 40, opacity: 0, duration: 1.8, delay: 2.2, ease: "expo.out" });
       gsap.to(".hero-wordmark-wrap", {
         yPercent: -14,
@@ -103,6 +100,38 @@ export function useResortMotion(enabled = true) {
         });
       });
 
+      /* ---------- Overview: pinned horizontal scroll (desktop AND mobile) ---------- */
+      {
+        const track = document.querySelector<HTMLElement>(".overview-track");
+        const section = document.querySelector<HTMLElement>("#overview");
+        if (track && section) {
+          const distance = () => Math.max(0, track.scrollWidth - track.parentElement!.clientWidth);
+          const cards = gsap.utils.toArray<HTMLElement>(".overview-card");
+          let current = -1;
+          const setActive = (idx: number) => {
+            if (idx === current) return;
+            current = idx;
+            cards.forEach((card, i) => card.classList.toggle("is-active", i === idx));
+          };
+          setActive(0);
+          const tl = gsap.timeline({
+            defaults: { ease: "none" },
+            scrollTrigger: {
+              trigger: section,
+              start: "top top",
+              end: () => `+=${distance() + window.innerHeight * 0.4}`,
+              pin: true,
+              scrub: 0.8,
+              anticipatePin: 1,
+              invalidateOnRefresh: true,
+              // The card matching scroll progress turns green and shows full colour.
+              onUpdate: (self) => setActive(Math.round(self.progress * (cards.length - 1))),
+            },
+          });
+          tl.to(track, { x: () => -distance() }, 0);
+          tl.to(".overview-progress", { width: "100%" }, 0);
+        }
+      }
 
       /* ---------- Residence cards: multi-speed image parallax ---------- */
       gsap.utils.toArray<HTMLElement>(".home-card").forEach((card, i) => {
@@ -163,37 +192,6 @@ export function useResortMotion(enabled = true) {
 
       /* ---------- Desktop-only pinned scenes ---------- */
       mm.add("(min-width: 768px)", () => {
-        /* Overview — pinned horizontal scroll */
-        const track = document.querySelector<HTMLElement>(".overview-track");
-        const section = document.querySelector<HTMLElement>("#overview");
-        if (track && section) {
-          const distance = () => Math.max(0, track.scrollWidth - track.parentElement!.clientWidth);
-          const cards = gsap.utils.toArray<HTMLElement>(".overview-card");
-          let current = -1;
-          const setActive = (idx: number) => {
-            if (idx === current) return;
-            current = idx;
-            cards.forEach((card, i) => card.classList.toggle("is-active", i === idx));
-          };
-          setActive(0);
-          const tl = gsap.timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: {
-              trigger: section,
-              start: "top top",
-              end: () => `+=${distance() + window.innerHeight * 0.4}`,
-              pin: true,
-              scrub: 0.8,
-              anticipatePin: 1,
-              invalidateOnRefresh: true,
-              // The card matching scroll progress grows, turns lime and shows its full description.
-              onUpdate: (self) => setActive(Math.round(self.progress * (cards.length - 1))),
-            },
-          });
-          tl.to(track, { x: () => -distance() }, 0);
-          tl.to(".overview-progress", { width: "100%" }, 0);
-        }
-
         /* Statement — pinned, word-by-word reveal while the section is held on screen */
         gsap.to(".statement-word", {
           opacity: 1,

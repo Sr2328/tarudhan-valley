@@ -1,3 +1,4 @@
+export { AboutSection } from "./AboutSection";
 export { ResortNavigation } from "./resort-navigation";
 export { ResortHero } from "./resort-hero";
 export { OverviewSection } from "./overview-section";
