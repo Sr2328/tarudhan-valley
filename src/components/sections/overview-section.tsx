@@ -12,8 +12,8 @@ function splitValue(value: string): [string, string] {
 
 export function OverviewSection() {
   return (
-    <section id="overview" className="flex min-h-[100svh] items-center overflow-hidden bg-background py-8 md:py-10">
-      <div className="mx-auto w-full max-w-[1520px] px-5 sm:px-8 md:px-12 lg:px-16">
+    <section id="overview" className="flex min-h-[100svh] w-full items-center overflow-hidden bg-background py-8 md:py-10">
+      <div className="mx-auto w-full min-w-0 max-w-[1520px] px-5 sm:px-8 md:px-12 lg:px-16">
         <motion.div
           initial="hidden"
           whileInView="show"
@@ -30,7 +30,7 @@ export function OverviewSection() {
           </h2>
         </motion.div>
 
-        <div className="overview-pin mt-6 md:mt-8">
+        <div className="overview-pin mt-6 min-w-0 max-w-full md:mt-8">
           <div className="overview-track">
             {overviewCards.map((card, i) => {
               const [num, unit] = splitValue(card.value);
@@ -54,7 +54,7 @@ export function OverviewSection() {
                   </div>
 
                   <div className="ov-media">
-                    <img src={card.image} alt={card.imageAlt} loading="lazy" draggable={false} className="ov-img" />
+                    <img src={card.image} alt={card.alt} loading="lazy" draggable={false} className="ov-img" />
                   </div>
                 </article>
               );
